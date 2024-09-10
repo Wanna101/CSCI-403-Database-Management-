@@ -1,0 +1,112 @@
+rt_movies_authors
+columns: review_link (text), author (text)
+
+SELECT ceil(AVG(length(review_link)))
+FROM rt_movies_authors;
+
+result: 19
+
+SELECT ceil(AVG(length(author)))
+FROM rt_movies_authors;
+
+result: 14
+
+# rows per page: 8192 = 24 + R * (27 + 19 + 4 + 14 + 4)
+SELECT floor((8192 - 24) / (27 + 19 + 4 + 14 = 4)) AS rows_per_page;
+
+rows_per_page: 120
+
+# of pages:
+SELECT COUNT(*)
+FROM rt_movies_authors;
+
+count: 28275
+
+SELECT ceil(28275/120);
+
+ceil: 235
+~235 pages
+
+SELECT pg_relation_size('rt_movies_authors')/8192.0;
+=> 228 actual pages
+
+We are assuming that 500 rows will be added each year:
+SELECT (COUNT(*) + 5000)/120 FROM rt_movies_authors;
+
+expected amount of pages: 277 pages
+
+
+rt_movies_directors
+columns: review_link (text), director (text)
+
+SELECT ceil(AVG(length(review_link)))
+FROM rt_movies_directors;
+
+result: 19
+
+SELECT ceil(AVG(length(director)))
+FROM rt_movies_directors;
+
+result: 14
+
+# rows per page: 8192 = 24 + R * (27 + 19 + 4 + 14 + 4)
+SELECT floor((8192 - 24) / (27 + 19 + 4 + 14 = 4)) AS rows_per_page;
+
+rows_per_page: 120
+
+# of pages:
+SELECT COUNT(*)
+FROM rt_movies_directors;
+
+count: 19227
+
+SELECT ceil(19227/120);
+
+ceil: 160
+~160 pages
+
+SELECT pg_relation_size('rt_movies_directors')/8192.0;
+=> 156 actual pages
+
+SELECT (COUNT(*) + 5000)/120 FROM rt_movies_authors;
+
+expected amount of pages: 201 pages
+
+
+
+rt_movies_genres
+columns: review_link (text), genre (text)
+
+SELECT ceil(AVG(length(review_link)))
+FROM rt_movies_genres;
+
+result: 19
+
+SELECT ceil(AVG(length(author)))
+FROM rt_movies_genres;
+
+result: 12 
+
+# rows per page: 8192 = 24 + R * (27 + 19 + 4 + 12 + 4)
+SELECT floor((8192 - 24) / (27 + 19 + 4 + 14 = 4)) AS rows_per_page;
+
+rows_per_page: 123
+
+# of pages:
+SELECT COUNT(*)
+FROM rt_movies_genres;
+
+count: 38129
+
+SELECT ceil(38129/123);
+
+ceil: 309
+~309 pages
+
+SELECT pg_relation_size('rt_movies_genres')/8192.0;
+=> 300 actual pages
+
+SELECT (COUNT(*) + 5000)/120 FROM rt_movies_authors;
+
+expected amount of pages: 359 pages
+

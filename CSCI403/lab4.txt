@@ -1,0 +1,127 @@
+Given some set of attributes R = {rider, driver, start, end, miles, car, payment, fare} where the only key is
+the set {rider, driver}, and functional dependencies.
+
+- {rider}->{payment}
+- {driver}->{car}
+- {start, end}->{miles, fare}
+- {fare}->{miles}
+
+Solution:
+
+Step 1:
+
+	1. Starting schema: R
+	2. Decompose on {rider}->{payment} - violates BCNF
+	3. Results:
+
+	 - FD: {rider}->{payment}
+	 - rider+ = {rider, payment}
+	 - X = {rider}
+	 - Y = rider+ = {rider, payment}
+	 - Z = EE = R - X - Y = {driver, start, end, miles, car, fare}
+
+	 - R1 = X U Y = {rider, payment}
+		key: rider
+		FDs: {rider}->{payment}
+		R1 is in BCNF
+	 - R2 = X U Z = {rider, driver, start, end, miles, car, fare}
+		key: rider, driver
+		FDs: {driver}->{car}
+		     {start, end}->{miles, fare}
+		     {fare}->{miles} 
+		R2 is not in BCNF
+	 - SQL:
+	   CREATE TABLE r1 AS SELECT rider, payment FROM r;
+	   ALTER TABLE r1 ADD CONSTRAINT r1_pkey PRIMARY KEY(rider); 
+	   CREATE TABLE r2 AS SELECT rider, driver, start, end, miles, car, fare FROM r;
+	   ALTER TABLE r2 ADD CONSTRAINT r2_pkey PRIMARY KEY(rider, driver); 
+
+Step 2: 
+	1. Starting schema: R2
+	2. Decompose on {driver}->{car} - violates BCNF
+	3. Results:
+
+	 - FD: {driver}->{car}
+	 - driver+ = {driver, car}
+	 - X = {driver}
+	 - Y = driver+ = {driver, car}
+	 - Z = EE = R2 - X - Y = {rider, start, end, miles, fare}
+
+	 - R3 = X U Y = {driver, car}
+		key: driver
+		FDs: {driver}->{car} 
+		R3 is in BCNF
+	 - R4 = X U Z = {driver, rider, start, end, miles, fare}
+		key: rider, driver  
+		FDs: {start, end}->{miles,fare}
+		     {fare}->{miles}
+		R4 is not in BCNF
+	 - SQL:
+	   CREATE TABLE r3 AS SELECT driver, car FROM r2;
+	   ALTER TABLE r3 ADD CONSTRAINT r3_pkey PRIMARY KEY(driver);
+	   CREATE TABLE r4 AS SELECT driver, rider, start, end, miles, fare FROM r2;
+	   ALTER TABLE r4 ADD CONSTRAINT r4_pkey PRIMARY KEY(rider, driver);
+	   DROP TABLE r2; 
+
+Step 3:
+	1. Starting schema: R4
+	2. Decompose on {start, end}->{miles, fare}
+	3. Results:
+	
+	 - FD: {start, end}->{miles, fare}
+	 - {start, end}+ = {start, end, miles, fare}
+	 - X = {start, end}
+	 - Y = {start, end}+ = {start, end, miles, fare}
+	 - Z = EE = R4 - X - Y = {driver, rider}
+
+	 - R5 = X U Y = {start, end, miles, fare}
+		key: start, end
+		FDs: {start, end}->{miles, fare}
+		     {fare}->{miles}
+		R5 is not in BCNF
+	 - R6 = X U Z = {start, end, driver, rider}
+		key: driver, rider
+		FDs: none
+		R6 is in BCNF
+	 - SQL:
+	   CREATE TABLE r5 AS SELECT start, end, miles, fare FROM r4;
+	   ALTER TABLE r5 ADD CONSTRAINT r5_pkey PRIMARY KEY(start, end);
+	   CREATE TABLE r6 AS SELECT start, end, driver, rider FROM r4;
+	   ALTER TABLE r6 ADD CONSTRAINT r6_pkey PRIMARY KEY(driver, rider);
+	   DROP TABLE r4;
+
+Step 4:
+	1. Starting schema: R5
+	2. Decompose on {fare}->{miles}
+	3. Results:
+
+	 - FD: {fare}->{miles}
+	 - fare+ = {fare, miles}
+	 - X = {fare}
+	 - Y = fare+ = {fare, miles}
+	 - Z = EE = R5 - X - Y = {start, end}
+
+	 - R7 = X U Y = {fare, miles}
+	 	key: fare
+		FDs: {fare}->{miles} 
+		R7 is in BCNF
+	 - R8 = X U Z = {fare, start, end}
+	 	key: fare, start, end
+		FDs: none
+		R8 is in BCNF
+	 - SQL:
+	   CREATE TABLE r7 AS SELECT fare, miles FROM r5;
+	   ALTER TABLE r7 ADD CONSTRAINT r7_pkey PRIMARY KEY(fare);
+	   CREATE TABLE r8 AS SELECT fare, start, end FROM r5;
+	   ALTER TABLE r8 ADD CONSTRAINT PRIMARY KEY(fare, start, end);
+	   DROP TABLE r5;
+ 
+
+Solution: ride decomposes into R1, R3, R6, R7, R8
+
+Final database with applicable FDs:
+- R1 = {rider, payment}, key = rider, FDs: {rider}->{payment} 
+- R3 = {driver, car}, key = driver, FDs: {driver}->{car}
+- R6 = {start, end, driver, rider}, key = driver, rider, FDs: none
+- R7 = {fare, miles}, key = fare, FDs: {fare}->{miles}
+- R8 = {fare, start, end}, key = fare, start, end, FDs: none 

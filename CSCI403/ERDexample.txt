@@ -1,0 +1,68 @@
+-- 403B - 02-24-23
+-- 1. regular entities
+
+CREATE TABLE team (
+	name TEXT PRIMARY KEY
+);
+
+CREATE TABLE field (
+	address TEXT PRIMARY KEY
+);
+
+-- 2. weak entities
+
+-- member of relationship
+CREATE TABLE player (
+	team_name TEXT REFERENCES team(name),
+	number INTEGER,
+	name TEXT,
+	PRIMARY KEY(team_name, number)
+);
+
+-- played on relationship
+CREATE TABLE game (
+	field_address TEXT REFERENCES field(address),
+	when TIMESTAMP,
+	sport TEXT,
+	PRIMARY KEY(field_address, when)
+);
+
+-- 3. 1:1 relationships
+
+ALTER TABLE team ADD COLUMN captain_number INTEGER;
+ALTER TABLE team ADD
+	FOREIGN KEY (name, captain_number)
+	REFERENCES player(team_name, number);
+
+-- 4. 1:n relationships
+-- no additional 1:n
+
+-- 5. n:m relationships
+
+-- plays relationship
+CREATE TABLE team_game_xref (
+	team_name TEXT REFERENCES team(name),
+	game_when TIMESTAMP,
+	game_field_address TEXT,
+	score INTEGER,
+	FOREIGN KEY (game_when, game_field_address)
+		REFERENCES game(when, field_address),
+	PRIMARY KEY (team_name, game_when, game_field_address)
+);
+
+-- 6. n-ary relationships
+-- don't have any
+
+-- 7. multi-valued attributes
+
+CREATE TABLE field_sport (
+	field_address TEXT REFERENCES field(address),
+	sport TEXT,
+	PRIMARY KEY (field_address, sport)
+);
+
+-- 8. derived attributes
+
+CREATE VIEW game_derived AS
+	SELECT game.*, when - NOW() AS days_until
+	FROM game;

@@ -1,0 +1,37 @@
+SELECT name, title, year
+FROM album, artist
+WHERE artist_id = artist.id;
+
+pi[name,title,year](sigma[artist_id=artist.id](album X artist))
+** a plus on the pi means that it will keep duplicates
+
+SELECT artist, title, year
+FFROM music
+WHERE year IN (SELECT year
+	       FROM music
+	       WHERE artist = 'Billie Eilish');
+
+pi[artist,title,year](sigma[year IN]{pi[year](sigma[artist='Billie Eilish'](music))}(music)
+
+SELECT name, SUM(size)
+FROM fruit2
+WHERE size < 25
+GROUP BY name
+HAVING SUM(size) > 20;
+
+** G stands for GROUP/agg.
+sigma[SUM(size)>20]([name]G[name,SUM(size)(sigma[size<25](fruit2)))
+
+** don't need another project because we already reduced down, GROUP BY already reduced
+
+SELECT a.name AS artist, gm.name AS member, x.begin_year, x.end_year
+FROM group_member AS gm
+	INNER JOIN artist_member_xref AS x
+		ON (x.member_id = gm.id)
+	RIGHT OUTER JOIN artist AS a
+		ON (x.artist_id = a.id);
+
+rho[a.name=artist,gm.name=member](pi[a.name, gm.name,x.begin_year,x.end_year]((rho[gm](group_member))bowtie[x.member_id=gm.id](rho[x](artist_member_xref))bowtiefeettoright[x.artist_id=a.id](rho[a](artist))))
+
+
+
